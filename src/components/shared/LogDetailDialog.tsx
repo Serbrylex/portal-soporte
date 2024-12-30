@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast"
+import { useRouter } from "next/navigation";
 
 interface LogData {
   id: string;
@@ -56,11 +57,14 @@ interface LogData {
 
 interface LogDetailDialogProps {
   log: LogData;
+  isOpen?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-export function LogDetailDialog({ log }: LogDetailDialogProps) {
+export function LogDetailDialog({ log, isOpen, onOpenChange }: LogDetailDialogProps) {
 
   const { toast } = useToast()
+  const router = useRouter()
 
   const copyJsonToClipboard = () => {
     const jsonString = JSON.stringify(log, null, 2)
@@ -79,10 +83,41 @@ export function LogDetailDialog({ log }: LogDetailDialogProps) {
     })
   }
 
+  const copyLinkToClipboard = () => {
+    const link = `${window.location.origin}?logId=${log.id}`
+    navigator.clipboard.writeText(link).then(() => {
+      toast({
+        title: "Enlace copiado",
+        description: "El enlace del log ha sido copiado al portapapeles.",
+      })
+    }).catch((err) => {
+      console.error('Error al copiar el enlace: ', err)
+      toast({
+        title: "Error",
+        description: "No se pudo copiar el enlace. Por favor, inténtalo de nuevo.",
+        variant: "destructive",
+      })
+    })
+  }
+
+  const handleClose = () => {
+    router.push('/')
+  }
+
+  const handleOnOpenChange = (open: boolean) => {
+    if (onOpenChange) {
+      onOpenChange(open)
+    }
+
+    if (!open) {
+      handleClose()
+    }
+  }
+
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={handleOnOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="outline">Ver detalles</Button>
+        <Button variant="outline" onClick={() => console.log('hello')}>Ver detalles</Button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[85vh]">
         <DialogHeader>
@@ -90,9 +125,12 @@ export function LogDetailDialog({ log }: LogDetailDialogProps) {
             {log.type}: {log.message}
           </DialogTitle>
         </DialogHeader>
-        <div className="mb-4">
+        <div className="mb-4 flex space-x-2">
           <Button onClick={copyJsonToClipboard}>
             Copiar JSON
+          </Button>
+          <Button onClick={copyLinkToClipboard}>
+            Copiar Enlace
           </Button>
         </div>
         <ScrollArea className="h-[60vh] pb-11">

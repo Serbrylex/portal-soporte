@@ -17,9 +17,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { LogDetailDialog } from "@/components/shared/LogDetailDialog";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function SupportPortal() {
-  const { logs } = useLogData();
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const logId = searchParams.get('logId')
+  const { logs } = useLogData()
+  const selectedLog = logId ? logs.find(log => log.id === logId) : null
+
+  const handleOpenDetails = (logId: string) => {
+    router.push(`?logId=${logId}`);
+  };
+
+  console.log({ selectedLog })
 
   return (
     <Card className="w-full max-w-6xl mx-auto mt-4">
@@ -52,7 +63,11 @@ export default function SupportPortal() {
                 </TableCell>
                 <TableCell>{log.user_name}</TableCell>
                 <TableCell>
-                  <LogDetailDialog log={log} />
+                  <LogDetailDialog
+                    log={log}
+                    onOpenChange={() => handleOpenDetails(log.id)}
+                    isOpen={log.id === logId}
+                  />
                 </TableCell>
               </TableRow>
             ))}
